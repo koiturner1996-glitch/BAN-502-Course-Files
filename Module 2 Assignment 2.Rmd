@@ -1,0 +1,101 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+library(readr)
+bike_cleaned_3 <- read_csv("bike_cleaned-3.csv")
+```
+
+```{r}
+bike <- bike_cleaned_3
+```
+
+```{r}
+bike = bike %>% mutate(dteday = mdy(dteday))
+bike = bike %>% mutate_if(is.character, as_factor)
+bike = bike %>% mutate(hr = as_factor(hr))
+glimpse(bike)
+```
+
+```{r}
+str(bike)
+```
+
+```{r}
+bike_quant <- bike %>% 
+  select(
+    count,
+    temp,
+    atemp,
+    hum,
+    windspeed
+  )
+ggpairs(bike_quant)
+```
+
+```{r}
+ggplot(bike, aes (x = season, y = count)) +
+  geom_boxplot() +
+  labs(title = "Count by Season", x = "Season", y = "Ride Count")
+```
+
+```{r}
+lm_model <- linear_reg() %>%
+  set_engine("lm")
+
+lm_wflwo <- workflow() %>%
+  add_model(lm_model) %>%
+  add_formula(count ~ hr)
+
+lm_fit <- fit(lm_wflwo, data = bike)
+
+lm_fit %>%
+  extract_fit_engine() %>%
+  summary()
+```
+
+```{r}
+ggplot(bike, aes(x = temp, y = count))+
+  geom_point()
+```
+
+```{r}
+lm_model <- linear_reg() %>%
+  set_engine("lm")
+
+lm_wflwo <- workflow() %>%
+  add_model(lm_model) %>%
+  add_formula(count ~ hr + temp)
+
+lm_fit_ht <- fit(lm_wflwo, data = bike)
+
+lm_fit_ht %>%
+  extract_fit_engine() %>%
+  summary()
+```
+
+```{r}
+lm_model <- linear_reg() %>%
+  set_engine("lm")
+
+lm_wflwo <- workflow() %>%
+  add_model(lm_model) %>%
+  add_formula(count ~ atemp + temp)
+
+lm_fit_ht <- fit(lm_wflwo, data = bike)
+
+lm_fit_ht %>%
+  extract_fit_engine() %>%
+  summary()
+```
+
+```{r}
+bike_recipe <- recipe(count ~ season + mnth + hr + holiday + weekday + workingday +
+                        weathersit + temp + atemp + hum + windspeed,
+                      data = bike) %>%
+step_dummy(all_nominal_predictors()) %>%
+
+```
+
